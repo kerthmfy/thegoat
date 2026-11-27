@@ -1,0 +1,75 @@
+/* ==========================================================================
+   NOTE PAGES: every file in /notes uses this one stylesheet.
+   The look: the iOS 6 Notes app. A leather strip on top, yellow lined paper,
+   a red margin line, handwritten title, easy-to-read body text.
+   ========================================================================== */
+:root{
+  --paper:#fdf8cf; --paper-line:rgba(110,150,200,.33); --margin:rgba(214,90,90,.55);
+  --ink:#2b2619; --soft:#5a5240; --link:#0b63c4; --desk:#e4e4e7;
+  --line-h:30px;   /* body text sits exactly on the ruled lines */
+  --ui:"Lucida Grande","Lucida Sans Unicode","Lucida Sans",Geneva,Verdana,sans-serif;
+  --hand:"Marker Felt","Patrick Hand","Comic Sans MS",cursive;
+  --mono:Monaco,Menlo,ui-monospace,Consolas,monospace;
+  --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% 0,#fafafa,var(--desk) 70%) fixed,var(--desk);color:var(--ink);font:16px/var(--line-h) var(--ui)}
+.sheet{
+  max-width:760px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:28px 48px;
+}
+
+/* the leather strip with the iOS back button */
+.leather{
+  position:relative;display:grid;place-items:center;height:52px;padding:0 12px;border-radius:8px 8px 0 0;
+  font:700 19px/1 var(--ui);color:#fff6e3;text-shadow:0 -1px 0 rgba(0,0,0,.45);
+  background:var(--noise),linear-gradient(#a8784a,#7a522c 50%,#6d4826 51%,#5b3b1e);background-blend-mode:multiply,normal;
+  box-shadow:inset 0 1px 0 rgba(255,225,180,.35),0 2px 3px rgba(0,0,0,.35);
+}
+.leather::after{content:"";position:absolute;inset:auto 8px 5px;border-top:2px dashed rgba(244,214,170,.45)}
+.back{ /* the arrow-shaped iOS 6 back button */
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  padding:7px 12px 7px 18px;font:700 13px/1 var(--ui);color:#fff;text-decoration:none;
+  clip-path:polygon(0 50%,12px 0,100% 0,100% 100%,12px 100%);border-radius:0 5px 5px 0;
+  background:linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,0) 50%,rgba(0,0,0,.15) 51%),#5e3d1f;
+}
+.back:hover{filter:brightness(1.15)}
+
+/* the paper */
+.paper{
+  position:relative;padding:var(--line-h) 28px calc(var(--line-h) * 2) 76px;min-height:60vh;
+  background:
+    linear-gradient(90deg,transparent 58px,var(--margin) 58px 59px,transparent 59px 62px,var(--margin) 62px 63px,transparent 63px),
+    repeating-linear-gradient(transparent 0 calc(var(--line-h) - 1px),var(--paper-line) calc(var(--line-h) - 1px) var(--line-h)),
+    var(--paper);
+  background-position:0 0,0 calc(var(--line-h) * -.18),0 0;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+.date{margin:0;font-size:13px;color:var(--soft)}
+h1{margin:0 0 var(--line-h);font:400 40px/60px var(--hand);letter-spacing:-.01em;text-wrap:balance}
+h2{margin:var(--line-h) 0 0;font:400 28px/var(--line-h) var(--hand)}
+p,ul,ol,blockquote{margin:0 0 var(--line-h);max-width:62ch}
+ul,ol{padding-left:22px}
+a{color:var(--link)}
+blockquote{padding-left:16px;border-left:3px solid #e0c97a;color:var(--soft);font-style:italic}
+code{font:14px var(--mono);padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.06)}
+pre{margin:0 0 var(--line-h);padding:12px 14px;overflow-x:auto;border-radius:6px;background:#1d1f21;color:#c5f0c5;font:13.5px/1.6 var(--mono)}
+pre code{padding:0;background:none;font:inherit}
+/* a photo taped onto the page */
+figure{position:relative;margin:var(--line-h) auto;max-width:520px;padding:10px 10px 12px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.25);transform:rotate(-1deg)}
+figure::before{content:"";position:absolute;top:-12px;left:50%;width:90px;height:26px;margin-left:-45px;transform:rotate(2deg);background:rgba(255,250,220,.75);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+figure img{display:block;width:100%;height:auto}
+figcaption{margin-top:6px;text-align:center;font:18px/1.2 var(--hand);color:#444}
+
+.sheet-foot{display:flex;justify-content:space-between;gap:12px;margin-top:22px;font-size:14px}
+.sheet-foot a{color:var(--soft);text-decoration:none}
+.sheet-foot a:hover{color:var(--link);text-decoration:underline}
+:focus-visible{outline:2px solid #3b8ff0;outline-offset:2px}
+
+@media (max-width:560px){
+  .paper{padding-left:44px;padding-right:18px;background-position:-22px 0,0 calc(var(--line-h) * -.18),0 0}
+  h1{font-size:32px}
+  .leather span{display:none}
+}

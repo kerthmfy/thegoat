@@ -1,0 +1,6 @@
+# Files your computer creates that shouldn't go on the website
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
