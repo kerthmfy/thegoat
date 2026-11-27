@@ -37,7 +37,7 @@
     6. About: leather Address Book       10. Links + footer
                                          11. Small screens
    HTML (inside <body>) follows the page from top to bottom.
-   JavaScript (the <script> at the end): 1 clock, 2 nav highlight, 3 theme,
+   JavaScript (the <script> at the end): 1 clock, 2 nav highlight, 3 light/dark switch,
    4 Bandcamp, 5 slide to unlock, 6 address book, 7 films, 8 phone zoom.
    ========================================================================== */
 
@@ -93,7 +93,7 @@
 }
 
 /* Dark theme = the same tokens with night values.
-   Light is the default; dark only applies when the theme picker sets data-theme="dark". */
+   Light is the default; dark only applies when the nav bar switch sets data-theme="dark". */
 :root[data-theme="dark"]{
   --page:#000000; --ink:#f2f2f4; --soft:#c6c6cb; --mute:#8e8e94; --line:#34353a; --link:#62b0ff;
   --hi:rgba(255,255,255,.12); --shadow:rgba(0,0,0,.6);
@@ -222,6 +222,30 @@ body::before{ /* fills the phone's status-bar strip so the page doesn't show thr
   box-shadow:inset 0 1px 2px rgba(0,0,0,.35);font-variant-numeric:tabular-nums;
 }
 .gnav .field b{font-weight:600;color:#2a2a2c}
+
+/* the light/dark switch: an iOS 6 toggle. Blue + sun = light, graphite + moon = dark */
+.gnav .mode{flex:0 0 78px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,.18);box-shadow:inset -1px 0 0 rgba(255,255,255,.7)}
+.switch{
+  position:relative;flex:none;width:58px;height:25px;padding:0;overflow:hidden;cursor:pointer;
+  border-radius:13px;border:1px solid #5f6066;
+  background:linear-gradient(#1c63cf,#4a9bf2 55%,#9fd6ff);              /* "on" blue, like iOS 6 */
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.8);
+  transition:background .25s;
+}
+.switch::before{ /* glossy top half of the track */
+  content:"";position:absolute;inset:1px 3px 50%;border-radius:12px 12px 6px 6px;background:linear-gradient(rgba(255,255,255,.4),rgba(255,255,255,.05));pointer-events:none}
+.switch svg{position:absolute;top:50%;width:13px;height:13px;margin-top:-6.5px;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.35))}
+.switch .sun{left:8px;fill:#fff;stroke:#fff;stroke-width:2;stroke-linecap:round}
+.switch .moon{right:8px;fill:#d9dce3}
+.switch .sw-knob{ /* the silver knob */
+  position:absolute;top:1px;left:34px;width:21px;height:21px;border-radius:50%;
+  background:radial-gradient(circle at 50% 30%,#ffffff,#e4e4e8 55%,#b9b9be);
+  box-shadow:0 1px 3px rgba(0,0,0,.55),inset 0 -1px 1px rgba(0,0,0,.12);
+  transition:left .25s cubic-bezier(.4,1.4,.5,1);
+}
+.switch[aria-checked="true"]{background:linear-gradient(#25262a,#45464b 55%,#6c6d72)}   /* graphite */
+.switch[aria-checked="true"] .sw-knob{left:1px}
+.switch:focus-visible{outline:2px solid var(--aqua-mid);outline-offset:3px}
 
 /* --------------------------------------------------------------------------
    4. THE BLACK STAGE (hero)
@@ -744,17 +768,6 @@ a.dev{cursor:zoom-in}
 .foot-row nav a{color:var(--ink);text-decoration:none;padding:0 10px;border-left:1px solid var(--line)}
 .foot-row nav a:first-child{border-left:0}
 .foot-row nav a:hover{text-decoration:underline}
-.foot-end{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:16px;padding-top:4px}
-.popup{position:relative;display:inline-flex}
-.popup select{
-  -webkit-appearance:none;appearance:none;font:600 12px var(--ui);color:var(--btn-ink);cursor:pointer;
-  padding:4px 36px 4px 12px;border-radius:6px;border:1px solid var(--btn-line);
-  background:linear-gradient(var(--btn-a),var(--btn-b));box-shadow:inset 0 1px 0 var(--hi),0 1px 2px var(--shadow);
-}
-.popup::after{ /* the blue Aqua arrow cap */
-  content:"\21D5";position:absolute;right:0;top:0;bottom:0;width:24px;display:grid;place-items:center;pointer-events:none;
-  border-radius:0 6px 6px 0;color:#fff;font-size:12px;background:linear-gradient(var(--aqua-mid),var(--aqua-top));border:1px solid var(--aqua-line);
-}
 
 /* --------------------------------------------------------------------------
    11. SMALL SCREENS
@@ -763,13 +776,15 @@ a.dev{cursor:zoom-in}
 @media (max-width:860px){.fan{--z:.2}}
 @media (max-width:900px){
   .gnav .clock{display:none}
+  .gnav .logo{flex-basis:64px}
   .dl{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .dl>.center{grid-column:1/-1;order:-1}
   .notes{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:760px){
   html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 100px)}
-  .gnav{display:grid;grid-template-columns:repeat(4,1fr);height:auto}
+  .gnav{display:grid;grid-template-columns:repeat(4,1fr) 72px;height:auto}
+  .gnav .mode{grid-column:5;grid-row:1 / span 2;border-right:0;border-left:1px solid rgba(0,0,0,.18);box-shadow:inset 1px 0 0 rgba(255,255,255,.7)}
   .gnav a{height:38px;border-bottom:1px solid rgba(0,0,0,.18)}
   .gnav a:nth-child(n+6){border-bottom:0}
   .gnav .logo{display:none}
@@ -857,6 +872,13 @@ a.dev{cursor:zoom-in}
     <a href="#photos">Photos</a>
     <a href="#notes">Notes</a>
     <a href="#links">Links</a>
+    <div class="mode">
+      <button class="switch" id="theme-switch" type="button" role="switch" aria-checked="false" aria-label="Dark mode">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+        <i class="sw-knob" aria-hidden="true"></i>
+      </button>
+    </div>
     <div class="clock"><div class="field"><span>Manila</span><b class="js-time">9:42 PM</b></div></div>
   </nav>
 </header>
@@ -1406,15 +1428,6 @@ a.dev{cursor:zoom-in}
   <div class="foot-row">
     <p>© <span id="yr">2026</span> Kerth Michael Yadao.</p>
   </div>
-  <div class="foot-end">
-    <label class="popup" for="theme"><span class="sr">Theme</span>
-      <select id="theme">
-        <option value="light">Theme: Aqua (light)</option>
-        <option value="dark">Theme: Graphite (dark)</option>
-        <option value="auto">Theme: match my device</option>
-      </select>
-    </label>
-  </div>
 </footer>
 
 </div>
@@ -1475,23 +1488,17 @@ a.dev{cursor:zoom-in}
   }
 
 
-  /* 3. THEME PICKER: light by default; the choice is remembered in this browser */
-  var picker = document.getElementById("theme");
+  /* 3. LIGHT/DARK SWITCH: light by default; the choice is remembered in this browser */
+  var themeSwitch = document.getElementById("theme-switch");
   var root = document.documentElement;
-  var deviceDark = window.matchMedia("(prefers-color-scheme: dark)");
-  function applyTheme(choice) {
-    var dark = choice === "dark" || (choice === "auto" && deviceDark.matches);
-    root.dataset.theme = dark ? "dark" : "light";
-  }
-  if (picker) {
-    var saved = "light";
-    try { saved = localStorage.getItem("theme") || "light"; } catch (e) {}
-    picker.value = saved;
-    picker.addEventListener("change", function () {
-      applyTheme(picker.value);
-      try { localStorage.setItem("theme", picker.value); } catch (e) { /* private window: fine */ }
+  if (themeSwitch) {
+    themeSwitch.setAttribute("aria-checked", root.dataset.theme === "dark" ? "true" : "false");
+    themeSwitch.addEventListener("click", function () {
+      var dark = root.dataset.theme !== "dark";
+      root.dataset.theme = dark ? "dark" : "light";
+      themeSwitch.setAttribute("aria-checked", dark ? "true" : "false");
+      try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) { /* private window: fine */ }
     });
-    deviceDark.addEventListener("change", function () { if (picker.value === "auto") applyTheme("auto"); });
   }
 
 

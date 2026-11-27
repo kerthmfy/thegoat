@@ -3,9 +3,6 @@
 A hand-made personal website in the style of the glossy, brushed-metal Apple web of 2002–2012.
 No frameworks and no build step: plain HTML, CSS and a little JavaScript you can open, read, edit and host anywhere.
 
-**Want to understand how it's built?** Read [`GUIDE.md`](GUIDE.md), a walkthrough of every part, with exercises.
-This README is the quick reference.
-
 ```
 kerth-site/
 ├── index.html            ← the whole homepage (HTML + CSS + JavaScript in one file)
@@ -26,8 +23,7 @@ kerth-site/
 ├── scripts/letterboxd.py ← reads the Letterboxd diary and writes films.json
 ├── .github/workflows/letterboxd.yml ← runs that script on GitHub every day
 ├── cloudflare-worker.js  ← optional: your own proxy for live film updates
-├── README.md             ← this file
-└── GUIDE.md              ← how everything is built
+└── README.md             ← this file
 ```
 
 Until `photo.jpg` exists, the page shows your initials instead, so nothing looks broken.

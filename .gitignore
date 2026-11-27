@@ -4,3 +4,6 @@ Thumbs.db
 desktop.ini
 *.swp
 .vscode/
+
+# My personal learning notes
+GUIDE.md
