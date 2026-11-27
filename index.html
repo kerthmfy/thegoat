@@ -32,7 +32,7 @@
     1. Base page + shared bits           7b. Code: iOS 6 table view of GitHub repos
     2. Glossy buttons & icon tiles        8. Music: brushed-metal player window
     3. Silver nav bar (sticky)           8b. Films: paper cinema tickets
-    4. The black stage (top banner)      8c. Photos: cork board + polaroids
+    4. The stage (top banner)      8c. Photos: cork board + polaroids
     5. The iPhone lineup + iOS screens    9. Notes list
     6. About: leather Address Book       10. Links + footer
                                          11. Small screens
@@ -73,8 +73,12 @@
   /* odds and ends */
   --lcd-a:#f2f5e4; --lcd-b:#d2d8bd; --lcd-ink:#2a2e21; --lcd-line:#868b78;
 
-  /* colors that stay the same in light AND dark (the stage, Aqua blue) */
-  --stage:#000000; --stage-ink:#f5f5f7; --stage-mute:#a1a1a7;
+  /* the "stage" (top banner + music panel): a soft white floor in light mode */
+  --stage-a:#ffffff; --stage-b:#e8eaee; --stage-floor:rgba(255,255,255,.95); --stage-line:#d9dbe0;
+  --stage-ink:#1d1d1f; --stage-mute:#6e6e73; --stage-rule:#d6d8dd;
+  --title-a:#2c2c2f; --title-b:#8a8a90; --title2-a:#8a8a90; --title2-b:#b4b4ba;
+  --phone-drop:drop-shadow(0 16px 18px rgba(0,0,0,.2)); --cover-shadow:0 10px 26px rgba(0,0,0,.3);
+  /* colors that stay the same in light AND dark (Aqua blue) */
   --aqua-top:#1a5fc8; --aqua-mid:#3b8ff0; --aqua-glow:#a9e0ff; --aqua-line:#0f418e;
   --green:#30c048;
 
@@ -95,6 +99,10 @@
 /* Dark theme = the same tokens with night values.
    Light is the default; dark only applies when the nav bar switch sets data-theme="dark". */
 :root[data-theme="dark"]{
+  --stage-a:#000000; --stage-b:#000000; --stage-floor:#202023; --stage-line:transparent;
+  --stage-ink:#f5f5f7; --stage-mute:#a1a1a7; --stage-rule:#2c2c30;
+  --title-a:#ffffff; --title-b:#87878c; --title2-a:#c9c9ce; --title2-b:#77777c;
+  --phone-drop:none; --cover-shadow:0 10px 30px rgba(0,0,0,.8);
   --page:#000000; --ink:#f2f2f4; --soft:#c6c6cb; --mute:#8e8e94; --line:#34353a; --link:#62b0ff;
   --hi:rgba(255,255,255,.12); --shadow:rgba(0,0,0,.6);
   --panel:#141416; --panel-2:#1c1c1f;
@@ -254,13 +262,14 @@ body::before{ /* fills the phone's status-bar strip so the page doesn't show thr
   position:relative;overflow:hidden;margin-top:16px;border-radius:10px;
   padding:46px 16px 40px;text-align:center;color:var(--stage-ink);
   /* a soft grey "floor" glow under the widgets */
-  background:radial-gradient(ellipse 52% 20% at 50% 71%,#202023,transparent 75%),var(--stage);
+  background:radial-gradient(ellipse 52% 20% at 50% 71%,var(--stage-floor),transparent 75%),linear-gradient(var(--stage-a),var(--stage-b));
+  border:1px solid var(--stage-line);
 }
 .hello{ /* gradient text: paint a gradient, then clip it to the letters */
   margin:0;font-family:var(--font);font-size:clamp(36px,6.4vw,62px);font-weight:600;letter-spacing:-.03em;line-height:1.05;
-  background:linear-gradient(#ffffff 30%,#87878c 92%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  background:linear-gradient(var(--title-a) 30%,var(--title-b) 92%);-webkit-background-clip:text;background-clip:text;color:transparent;
 }
-.hello span{display:block;margin-top:.15em;font-size:.48em;font-weight:400;letter-spacing:-.01em;background:linear-gradient(#c9c9ce,#77777c);-webkit-background-clip:text;background-clip:text}
+.hello span{display:block;margin-top:.15em;font-size:.48em;font-weight:400;letter-spacing:-.01em;background:linear-gradient(var(--title2-a),var(--title2-b));-webkit-background-clip:text;background-clip:text}
 .stage-sub{max-width:33em;margin:0 auto;color:var(--stage-mute);font-size:clamp(17px,2.1vw,20px);text-wrap:balance}
 .stage-acts{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:22px}
 
@@ -291,7 +300,7 @@ a.dev:hover,a.dev:focus-visible{--lift:-10px}
 a.dev{cursor:zoom-in}
 .dev:focus-visible{outline:none}
 .dev:focus-visible .dev-scr{outline:6px solid var(--aqua-mid)}
-.dev>img{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.dev>img{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:var(--phone-drop)} /* soft shadow on the light floor */
 .dev-scr{
   position:absolute;left:0;top:0;width:320px;height:568px;font-size:32px;
   display:flex;flex-direction:column;overflow:hidden;background:#000;font-family:var(--ios);
@@ -638,7 +647,7 @@ a.dev{cursor:zoom-in}
 .lcd b{display:block;font-size:15px}
 .prog{position:relative;height:7px;margin:6px auto 0;max-width:340px;border:1px solid rgba(0,0,0,.5);border-radius:4px;background:rgba(255,255,255,.45);overflow:hidden}
 .prog i{position:absolute;inset:0 62% 0 0;background:rgba(0,0,0,.55)}
-.player-body{display:grid;grid-template-columns:300px minmax(0,1fr);gap:clamp(20px,4vw,44px);align-items:start;padding:clamp(18px,4vw,36px);border-radius:4px;border:1px solid #000;background:radial-gradient(ellipse 60% 40% at 30% 85%,#1c1c1f,transparent 70%),var(--stage);color:var(--stage-ink)}
+.player-body{display:grid;grid-template-columns:300px minmax(0,1fr);gap:clamp(20px,4vw,44px);align-items:start;padding:clamp(18px,4vw,36px);border-radius:4px;border:1px solid var(--stage-line);background:radial-gradient(ellipse 60% 40% at 30% 85%,var(--stage-floor),transparent 70%),linear-gradient(var(--stage-a),var(--stage-b));color:var(--stage-ink)}
 .cover{position:relative;padding-bottom:70px}
 .cover-play{ /* iTunes-style play button over the album cover */
   position:absolute;left:50%;top:calc(50% - 35px);display:grid;place-items:center;width:84px;height:84px;margin:-42px 0 0 -42px;
@@ -651,14 +660,14 @@ a.dev{cursor:zoom-in}
 @media (hover:hover){.cover-play{opacity:.85}.cover:hover .cover-play{opacity:1}}
 .transport .play.on{background:linear-gradient(#b9b9bd,#fdfdfd);box-shadow:inset 0 2px 4px rgba(0,0,0,.35)}
 .player.playing .lcd b::before{content:"\25B6\FE0E  ";font-size:.8em}
-.cover .art{box-shadow:0 10px 30px rgba(0,0,0,.8);-webkit-box-reflect:below 2px linear-gradient(transparent 76%,rgba(255,255,255,.28))}
+.cover .art{box-shadow:var(--cover-shadow);-webkit-box-reflect:below 2px linear-gradient(transparent 76%,rgba(255,255,255,.28))}
 #bc iframe{display:block;width:100%;border:0;border-radius:6px}
 .album{display:flex;flex-direction:column;gap:12px;min-width:0}
 .album p{margin:0;color:var(--stage-mute);font-size:17px;max-width:30em}
 .eyebrow{font-size:13px!important;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
-.album h3{font-family:var(--font);margin:0;font-size:clamp(34px,5vw,50px);font-weight:600;letter-spacing:-.035em;line-height:1;background:linear-gradient(#fff 35%,#8e8e93);-webkit-background-clip:text;background-clip:text;color:transparent}
+.album h3{font-family:var(--font);margin:0;font-size:clamp(34px,5vw,50px);font-weight:600;letter-spacing:-.035em;line-height:1;background:linear-gradient(var(--title-a) 35%,var(--title-b));-webkit-background-clip:text;background-clip:text;color:transparent}
 .album .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
-.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:8px 0 0;padding-top:14px;border-top:1px solid #2c2c30;font-size:15px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:8px 0 0;padding-top:14px;border-top:1px solid var(--stage-rule);font-size:15px}
 .facts dt{color:var(--stage-mute)}.facts dd{margin:0}
 
 /* --------------------------------------------------------------------------
@@ -886,7 +895,7 @@ a.dev{cursor:zoom-in}
 <main>
 
 <!-- =====================================================================
-     HERO: the black stage with the widget fan
+     HERO: the stage with the iPhone lineup
      ===================================================================== -->
 <section class="stage" id="top">
   <h1 class="hello">hello, human.<span> or AI scraper. or whatever.</span></h1>
@@ -1511,7 +1520,8 @@ a.dev{cursor:zoom-in}
         var slot = document.getElementById("bc");
         if (!slot.querySelector("iframe")) {
           var frame = document.createElement("iframe");
-          frame.src = "https://bandcamp.com/EmbeddedPlayer/album=3168355554/size=large/bgcol=333333/linkcol=4ec5ff/tracklist=false/transparent=true/"; /* dark style */
+          var dark = document.documentElement.dataset.theme === "dark";   /* Bandcamp's white or dark style, matching the page */
+          frame.src = "https://bandcamp.com/EmbeddedPlayer/album=3168355554/size=large/bgcol=" + (dark ? "333333/linkcol=4ec5ff" : "ffffff/linkcol=0687f5") + "/tracklist=false/transparent=true/";
           frame.title = "Trajectories by Kerth Yadao on Bandcamp";
           frame.allow = "autoplay";
           slot.appendChild(frame);
