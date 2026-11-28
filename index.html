@@ -791,15 +791,18 @@ a.dev{cursor:zoom-in}
   .notes{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:760px){
-  html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 100px)}
-  .gnav{display:grid;grid-template-columns:repeat(4,1fr) 72px;height:auto}
-  .gnav .mode{grid-column:5;grid-row:1 / span 2;border-right:0;border-left:1px solid rgba(0,0,0,.18);box-shadow:inset 1px 0 0 rgba(255,255,255,.7)}
-  .gnav a{height:38px;border-bottom:1px solid rgba(0,0,0,.18)}
-  .gnav a:nth-child(n+6){border-bottom:0}
+  /* NAV on phones: one slim row. Swipe the buttons sideways; the switch stays pinned on the right. */
+  .gnav{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+  .gnav::-webkit-scrollbar{display:none}                      /* hide the scrollbar (Safari/Chrome) */
+  .gnav a{flex:1 0 auto;padding:0 15px}                      /* grow to fill, but never squash */
+  .gnav .mode{
+    position:sticky;right:0;z-index:1;flex:0 0 72px;background:inherit;   /* same silver as the bar */
+    border-right:0;border-left:1px solid rgba(0,0,0,.25);
+    box-shadow:-6px 0 8px -5px rgba(0,0,0,.35),inset 1px 0 0 rgba(255,255,255,.7);  /* buttons slide under it */
+  }
   .gnav .logo{display:none}
   .gnav .clock{display:none}
-  .fan{--z:.27}
-  .dev.d1,.dev.d5{display:none}
+  .dev.d1,.dev.d5{display:none}   /* only three phones fit */
   .feat-grid{grid-template-columns:minmax(0,1fr)}
   .feat-side{max-width:340px}
   .player-body{grid-template-columns:minmax(0,1fr)}
@@ -812,21 +815,39 @@ a.dev{cursor:zoom-in}
   .feat .items{grid-template-columns:minmax(0,1fr)}
   .links{grid-template-columns:minmax(0,1fr)}
 }
-@media (max-width:600px){.fan{--z:.21}}
-@media (max-width:480px){.fan{--z:.17}}
-@media (max-width:380px){.fan{--z:.155}}
+/* PHONE LINEUP on small screens: the middle phone (lock screen) is bigger than the two beside it.
+   .fan --z = side phones, .d3 --z = middle phone. */
+@media (max-width:760px){.fan{--z:.24}.dev.d3{--z:.3}}
+@media (max-width:600px){.fan{--z:.19}.dev.d3{--z:.24}}
+@media (max-width:480px){.fan{--z:.15}.dev.d3{--z:.205}}
+@media (max-width:380px){.fan{--z:.12}.dev.d3{--z:.165}}
 @media (max-width:480px){
   .dl{grid-template-columns:minmax(0,1fr)}
   .items{grid-template-columns:minmax(0,1fr)}
-  .stage{padding-top:34px}
+  .dl>.center{order:0}            /* one column: "My projects" first, then Home Server, then Essentials */
+  .stage{padding:28px 10px 26px}  /* less padding so the phones get the room */
+  .fan{margin-top:16px;padding-bottom:calc(1584px * var(--z) * .22)}
+  .stage-acts{margin-top:16px}
+}
+/* SPACING on phones: tighter gaps between sections and inside panels */
+@media (max-width:600px){
+  .sec{margin-top:52px}
+  .sec-head{margin-bottom:18px}
+  .wrap{padding-block:10px 22px}
 }
 @media (max-width:720px){
   .pages{grid-template-columns:minmax(0,1fr)}
   .pg{min-height:0}
   .pg.l,.pg.r{border-radius:4px;background:#fffdf7;box-shadow:2px 2px 0 #d6cfbb}
   .pg.l{margin-bottom:10px;padding-bottom:10px}
-  .names{display:flex;flex-wrap:wrap;gap:4px;padding:0 12px}
-  .names button{width:auto;padding:3px 10px;border-radius:12px}
+  /* contacts become one row of pills instead of a long list */
+  .pg.l [role="tablist"]{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px}
+  .pg.l .grp{display:none}
+  .search{margin:0 12px 10px}
+  .names{margin:0}
+  .names button{width:auto;padding:4px 12px;border-radius:14px;border:1px solid #d8d1bf;background:#fff}
+  .names button[aria-selected="true"]{border-color:#2f73d1}
+  .pg.r{padding-top:20px}
   .letter,.ribbon{display:none}
   .fields{grid-template-columns:minmax(0,1fr);gap:2px}
   .fields dt{margin-top:8px;text-align:left}
@@ -1479,12 +1500,20 @@ a.dev{cursor:zoom-in}
 
   /* 2. NAV HIGHLIGHT: darken the nav button for the section you're reading */
   var navLinks = Array.prototype.slice.call(document.querySelectorAll('.gnav a[href^="#"]:not(.logo)'));
+  var navBar = document.querySelector(".gnav");
+  var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* On phones the nav is one row you can swipe. This slides the lit-up button into view. */
+  function showInNav(a) {
+    if (navBar.scrollWidth <= navBar.clientWidth) return;   /* everything fits: nothing to do */
+    var room = navBar.clientWidth - 72;                      /* 72px = the pinned light/dark switch */
+    navBar.scrollTo({ left: a.offsetLeft - (room - a.offsetWidth) / 2, behavior: calm ? "auto" : "smooth" });
+  }
   if ("IntersectionObserver" in window) {
     var watcher = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
         navLinks.forEach(function (a) {
-          if (a.hash === "#" + entry.target.id) a.setAttribute("aria-current", "true");
+          if (a.hash === "#" + entry.target.id) { a.setAttribute("aria-current", "true"); showInNav(a); }
           else a.removeAttribute("aria-current");
         });
       });
