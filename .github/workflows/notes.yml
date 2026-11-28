@@ -1,0 +1,50 @@
+# Builds my notes.
+# Whenever I push a change in the notes/ folder, GitHub runs scripts/notes.py:
+# it turns each notes/*.md into a page, updates the Notes list on index.html,
+# and gets photos ready for the web. If anything changed, it saves and republishes.
+#
+# Run it by hand: GitHub → your repo → Actions → "Build notes" → Run workflow.
+
+name: Build notes
+
+on:
+  push:
+    paths:
+      - "notes/**"
+      - "scripts/notes.py"
+      - ".github/workflows/notes.yml"
+  workflow_dispatch:        # adds the "Run workflow" button
+
+permissions:
+  contents: write   # to save the built pages
+  pages: write      # to ask GitHub Pages to republish
+
+concurrency: notes  # one run at a time
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the photo tools
+        run: pip install pillow pillow-heif
+
+      - name: Build the notes
+        run: python3 scripts/notes.py
+
+      - name: Save and republish if anything changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain -- notes index.html)" ]; then
+            echo "Notes were already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A notes index.html
+          git commit -m "Build notes"
+          git pull --rebase   # in case the films bot saved something meanwhile
+          git push
+          gh api --method POST "repos/${{ github.repository }}/pages/builds" || echo "Pages will pick it up on its next build."
