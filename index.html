@@ -38,7 +38,8 @@
                                          11. Small screens
    HTML (inside <body>) follows the page from top to bottom.
    JavaScript (the <script> at the end): 1 clock, 2 nav highlight, 3 light/dark switch,
-   4 Bandcamp, 5 slide to unlock, 6 address book, 7 films, 8 phone zoom.
+   4 Bandcamp, 5 slide to unlock, 6 address book, 7 films, 8 phone zoom,
+   9 swipeable phones, 10 cover flow.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -295,6 +296,10 @@ body::before{ /* fills the phone's status-bar strip so the page doesn't show thr
   -webkit-box-reflect:below 2px linear-gradient(transparent 70%,rgba(255,255,255,.2));
 }
 .dev+.dev{margin-left:calc(-303px * var(--z))}   /* phones overlap a little */
+/* page dots under the phones (only shown on phones, where the row swipes) */
+.fan-dots{display:none;justify-content:center;gap:8px;margin:-4px 0 14px}
+.fan-dots i{width:7px;height:7px;border-radius:50%;background:var(--stage-mute);opacity:.3;transition:opacity .2s}
+.fan-dots i.on{opacity:.9}
 .dev.d1,.dev.d5{z-index:1}.dev.d2,.dev.d4{z-index:2}.dev.d3{z-index:3}
 a.dev:hover,a.dev:focus-visible{--lift:-10px}
 a.dev{cursor:zoom-in}
@@ -704,6 +709,43 @@ a.dev{cursor:zoom-in}
 }
 .more{margin:26px 0 0;text-align:center}
 
+/* FAVORITE FILMS: an iTunes-style Cover Flow. The poster in the middle faces you; the rest
+   are turned sideways. JS 9 moves them by setting each poster's transform. */
+.cf{
+  max-width:900px;margin:0 auto 34px;padding:20px 0 18px;overflow:hidden;border-radius:10px;text-align:center;color:var(--stage-ink);
+  background:radial-gradient(ellipse 60% 22% at 50% 66%,var(--stage-floor),transparent 75%),linear-gradient(var(--stage-a),var(--stage-b));
+  border:1px solid var(--stage-line);
+}
+.cf[hidden]{display:none}
+.cf-label{margin:0;font:700 11px/1 var(--ui);letter-spacing:.18em;text-transform:uppercase;color:var(--stage-mute)}
+.cf-stage{
+  --w:190px;                                   /* width of one poster */
+  position:relative;height:calc(var(--w) * 1.5 * 1.36 + 16px);margin-top:16px;
+  perspective:900px;touch-action:pan-y;user-select:none;-webkit-user-select:none;
+}
+.cf-item{
+  position:absolute;left:50%;top:16px;width:var(--w);aspect-ratio:2/3;margin-left:calc(var(--w) / -2);
+  transition:transform .5s cubic-bezier(.2,.8,.3,1),opacity .3s;-webkit-user-drag:none;
+  -webkit-box-reflect:below 2px linear-gradient(transparent 62%,rgba(255,255,255,.3));   /* the glossy floor reflection */
+}
+.cf-item img{display:block;width:100%;height:100%;object-fit:cover;border-radius:2px;box-shadow:0 8px 18px rgba(0,0,0,.28);-webkit-user-drag:none}
+.cf-item:not(.on){cursor:pointer}
+.cf-item:focus-visible{outline:none}
+.cf-item:focus-visible img{outline:3px solid var(--aqua-mid);outline-offset:3px}
+.cf-cap{margin:2px 0 0;min-height:1.5em;font-size:14px;color:var(--stage-mute)}
+.cf-cap b{font:600 18px/1.3 var(--font);color:var(--stage-ink);margin-right:4px}
+.cf-review{max-width:30em;min-height:2.9em;margin:4px auto 0;padding:0 16px;font:italic 14px/1.45 var(--ui);color:var(--stage-mute);text-wrap:balance}
+.cf-review:not(:empty)::before{content:"\201C"}.cf-review:not(:empty)::after{content:"\201D"}   /* curly quotes */
+/* the scroller under the posters, like the one under iTunes' Cover Flow */
+.cf-scroll{display:block;width:min(320px,70%);height:14px;margin:12px auto 0;-webkit-appearance:none;appearance:none;cursor:pointer;
+  border-radius:7px;background:linear-gradient(rgba(128,130,138,.45),rgba(128,130,138,.2));box-shadow:inset 0 1px 3px rgba(0,0,0,.35)}  /* grey works on white and black */
+.cf-scroll::-webkit-slider-thumb{-webkit-appearance:none;width:var(--thumb,60px);height:14px;border-radius:7px;border:1px solid #8c8e94;
+  background:linear-gradient(#fdfdfd,#d3d5da 50%,#c0c2c8 51%,#dfe1e5)}
+.cf-scroll::-moz-range-thumb{width:var(--thumb,60px);height:12px;border-radius:7px;border:1px solid #8c8e94;
+  background:linear-gradient(#fdfdfd,#d3d5da 50%,#c0c2c8 51%,#dfe1e5)}
+.cf-scroll[hidden]{display:none}
+@media (max-width:600px){.cf-stage{--w:140px;perspective:600px}.cf{margin-inline:-4px}}
+
 /* --------------------------------------------------------------------------
    8c. PHOTOS: polaroids pinned to a cork board in a wooden frame
    -------------------------------------------------------------------------- */
@@ -802,7 +844,6 @@ a.dev{cursor:zoom-in}
   }
   .gnav .logo{display:none}
   .gnav .clock{display:none}
-  .dev.d1,.dev.d5{display:none}   /* only three phones fit */
   .feat-grid{grid-template-columns:minmax(0,1fr)}
   .feat-side{max-width:340px}
   .player-body{grid-template-columns:minmax(0,1fr)}
@@ -815,18 +856,30 @@ a.dev{cursor:zoom-in}
   .feat .items{grid-template-columns:minmax(0,1fr)}
   .links{grid-template-columns:minmax(0,1fr)}
 }
-/* PHONE LINEUP on small screens: the middle phone (lock screen) is bigger than the two beside it.
-   .fan --z = side phones, .d3 --z = middle phone. */
-@media (max-width:760px){.fan{--z:.24}.dev.d3{--z:.3}}
-@media (max-width:600px){.fan{--z:.19}.dev.d3{--z:.24}}
-@media (max-width:480px){.fan{--z:.15}.dev.d3{--z:.205}}
-@media (max-width:380px){.fan{--z:.12}.dev.d3{--z:.165}}
+/* PHONE LINEUP on phones: all five phones in a row you swipe sideways, like iOS home screen pages.
+   It starts on the middle phone (JS 9 does that) and the dots underneath show which one you're on.
+   scroll-snap makes each swipe stop with a phone in the centre. */
+@media (max-width:760px){
+  .fan{
+    --z:.26;position:relative;justify-content:flex-start;margin-inline:-10px;
+    overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none;
+    scroll-snap-type:x mandatory;
+    /* half the box minus half a phone on each side, so the first and last phone can sit in the middle too */
+    padding:14px calc(50% - 863px * var(--z) / 2) calc(1584px * var(--z) * .22);
+  }
+  .fan::-webkit-scrollbar{display:none}
+  .dev{scroll-snap-align:center}
+  .fan-dots{display:flex}
+}
+@media (max-width:600px){.fan{--z:.23}}
+@media (max-width:480px){.fan{--z:.2}}
+@media (max-width:380px){.fan{--z:.17}}
 @media (max-width:480px){
   .dl{grid-template-columns:minmax(0,1fr)}
   .items{grid-template-columns:minmax(0,1fr)}
   .dl>.center{order:0}            /* one column: "My projects" first, then Home Server, then Essentials */
   .stage{padding:28px 10px 26px}  /* less padding so the phones get the room */
-  .fan{margin-top:16px;padding-bottom:calc(1584px * var(--z) * .22)}
+  .fan{margin-top:6px}
   .stage-acts{margin-top:16px}
 }
 /* SPACING on phones: tighter gaps between sections and inside panels */
@@ -1037,6 +1090,7 @@ a.dev{cursor:zoom-in}
       </div>
     </a>
   </div>
+  <div class="fan-dots" aria-hidden="true"><i></i><i></i><i class="on"></i><i></i><i></i></div>
 
   <p class="stage-sub">This is my little corner of the internet. Enjoy lad</p>
   <div class="stage-acts">
@@ -1337,6 +1391,27 @@ a.dev{cursor:zoom-in}
   <div class="sec-head">
     <h2>Films</h2>
   </div>
+
+  <!-- FAVORITE FILMS (Cover Flow)
+       1. Make a folder called "posters" and save each poster in it as 1.jpg, 2.jpg, 3.jpg …
+          (on Letterboxd: open the film, right-click the poster, "Save Image As…").
+       2. Below, fill in each film's title, year and Letterboxd link, in the same order.
+          data-review is optional: my review, shown under the title (leave it out if there's none).
+       Posters that don't exist simply don't show, and with none at all this whole shelf stays hidden.
+       Want more or fewer? Copy or delete an <a …> line (and its poster). -->
+  <div class="cf" id="cf" hidden>
+    <p class="cf-label">Favorites</p>
+    <div class="cf-stage">
+      <a class="cf-item" href="https://letterboxd.com/film/aftersun/" data-title="Aftersun" data-year="2022" data-review="watching this on christmas was not a great idea at all" target="_blank" rel="noopener noreferrer"><img src="posters/1.jpg" alt="Aftersun"></a>
+      <a class="cf-item" href="https://letterboxd.com/kerthfyadao/film/la-haine/" data-title="La Haine" data-year="1995" data-review="nique la police" target="_blank" rel="noopener noreferrer"><img src="posters/2.jpg" alt="La Haine"></a>
+      <a class="cf-item" href="https://letterboxd.com/kerthfyadao/film/city-of-god/" data-title="City of God" data-year="2002" data-review="absolute masterclass of a storytelling, holy shit. this is gonna stick for a while." target="_blank" rel="noopener noreferrer"><img src="posters/3.jpg" alt="City of God"></a>
+      <a class="cf-item" href="https://letterboxd.com/kerthfyadao/film/speed-racer/" data-title="Speed Racer" data-year="2008" data-review="sucker to those car powers fr" target="_blank" rel="noopener noreferrer"><img src="posters/4.jpg" alt="Speed Racer"></a>
+    </div>
+    <p class="cf-cap" aria-live="polite"><b class="cf-title"></b><span class="cf-year"></span></p>
+    <p class="cf-review"></p>
+    <input class="cf-scroll" type="range" min="0" max="0" value="0" aria-label="Browse favorite films">
+  </div>
+
   <p class="tk-src" id="tk-src" aria-live="polite"></p>
   <div class="tickets" id="tickets">
     <a class="ticket" href="https://letterboxd.com/kerthfyadao/" target="_blank" rel="noopener noreferrer">
@@ -1754,6 +1829,109 @@ a.dev{cursor:zoom-in}
     go.addEventListener("click", function () { opener = null; closeZoom(); });
     zoom.addEventListener("click", function (e) { if (e.target === zoom || e.target === stage) closeZoom(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeZoom(); });
+  }
+
+  /* 9. SWIPEABLE PHONES (small screens only): start on the middle phone and light up the matching dot */
+  var fan = document.querySelector(".stage .fan");
+  var fanDots = document.querySelectorAll(".fan-dots i");
+  if (fan && fanDots.length) {
+    var fanPhones = Array.prototype.slice.call(fan.querySelectorAll(".dev"));
+    /* how far the row has to scroll so phone number i sits in the middle */
+    function phoneCentre(i) { return fanPhones[i].offsetLeft + fanPhones[i].offsetWidth / 2 - fan.clientWidth / 2; }
+    function startInMiddle() { if (fan.scrollWidth > fan.clientWidth) fan.scrollLeft = phoneCentre(2); }
+    var dotQueued = false;
+    function lightDot() {
+      dotQueued = false;
+      var best = 0;
+      fanPhones.forEach(function (p, i) {
+        if (Math.abs(phoneCentre(i) - fan.scrollLeft) < Math.abs(phoneCentre(best) - fan.scrollLeft)) best = i;
+      });
+      fanDots.forEach(function (d, i) { d.classList.toggle("on", i === best); });
+    }
+    /* requestAnimationFrame = update at most once per screen refresh, not on every scroll event */
+    fan.addEventListener("scroll", function () { if (!dotQueued) { dotQueued = true; requestAnimationFrame(lightDot); } }, { passive: true });
+    startInMiddle();
+    window.addEventListener("load", startInMiddle);   /* again once the phone pictures have loaded */
+  }
+
+  /* 10. COVER FLOW: my favorite films. Only posters that actually load are used;
+         with none, the shelf stays hidden. Click/tap a side poster, swipe, drag the
+         scroller or use the arrow keys to browse. Clicking the middle poster opens Letterboxd. */
+  var cf = document.getElementById("cf");
+  if (cf) {
+    var cfStage = cf.querySelector(".cf-stage"), cfRange = cf.querySelector(".cf-scroll");
+    var cfTitle = cf.querySelector(".cf-title"), cfYear = cf.querySelector(".cf-year"), cfReview = cf.querySelector(".cf-review");
+    var cfAll = Array.prototype.slice.call(cf.querySelectorAll(".cf-item"));
+    var cfItems = [], cfAt = 0, cfWaiting = cfAll.length;
+
+    /* wait for every poster to load (or fail) before showing the shelf */
+    cfAll.forEach(function (item) {
+      var img = item.querySelector("img");
+      item.draggable = img.draggable = false;   /* so dragging a poster swipes instead of picking up the picture */
+      function settled(ok) { if (!ok) item.remove(); if (--cfWaiting === 0) cfStart(); }
+      if (img.complete) settled(img.naturalWidth > 0);
+      else {
+        img.addEventListener("load", function () { settled(true); });
+        img.addEventListener("error", function () { settled(false); });
+      }
+    });
+
+    function cfStart() {
+      cfItems = Array.prototype.slice.call(cf.querySelectorAll(".cf-item"));
+      if (!cfItems.length) return;
+      cf.hidden = false;
+      cfRange.max = cfItems.length - 1;
+      cfRange.hidden = cfItems.length < 2;
+      cfShow(Math.floor((cfItems.length - 1) / 2));   /* start in the middle */
+    }
+
+    /* put poster number i in the middle and turn the others sideways */
+    function cfShow(i) {
+      cfAt = Math.max(0, Math.min(cfItems.length - 1, i));
+      cfItems.forEach(function (item, k) {
+        var o = k - cfAt;              /* how many places from the middle (negative = left) */
+        var side = o < 0 ? -1 : 1, far = Math.abs(o);
+        item.style.transform = o === 0
+          ? "translateZ(40px)"
+          : "translateX(" + side * (82 + (far - 1) * 32) + "%) translateZ(-60px) rotateY(" + (-side * 62) + "deg)";
+        item.style.zIndex = 50 - far;
+        item.style.opacity = far > 4 ? 0 : 1;
+        item.tabIndex = o === 0 ? 0 : -1;  /* Tab lands on the middle one only */
+        item.classList.toggle("on", o === 0);
+      });
+      var cur = cfItems[cfAt];
+      cfTitle.textContent = cur.dataset.title || "";
+      cfYear.textContent = cur.dataset.year || "";
+      cfReview.textContent = cur.dataset.review || "";
+      cfRange.value = cfAt;
+      cfRange.style.setProperty("--thumb", Math.max(30, cfRange.offsetWidth / cfItems.length) + "px");
+    }
+
+    /* swipe (touch) or drag (mouse) */
+    var cfDownX = null, cfSwiped = false;
+    cfStage.addEventListener("pointerdown", function (e) { cfDownX = e.clientX; cfSwiped = false; });
+    cfStage.addEventListener("pointerup", function (e) {
+      if (cfDownX === null) return;
+      var dx = e.clientX - cfDownX; cfDownX = null;
+      if (Math.abs(dx) > 30) {         /* moved more than 30px: it's a swipe, not a tap */
+        cfSwiped = true;
+        var steps = Math.max(1, Math.round(Math.abs(dx) / 120));   /* a longer swipe skips more */
+        cfShow(cfAt + (dx < 0 ? steps : -steps));
+      }
+    });
+    cfStage.addEventListener("click", function (e) {
+      var item = e.target.closest(".cf-item");
+      if (cfSwiped) { e.preventDefault(); cfSwiped = false; return; }
+      if (item && !item.classList.contains("on")) { e.preventDefault(); cfShow(cfItems.indexOf(item)); }
+    });
+    cfStage.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      cfShow(cfAt + (e.key === "ArrowRight" ? 1 : -1));
+      cfItems[cfAt].focus({ preventScroll: true });
+    });
+    cfRange.addEventListener("input", function () { cfShow(+cfRange.value); });
+    window.addEventListener("resize", function () { if (cfItems.length) cfShow(cfAt); });
   }
 
   /* PROJECTS on phones: "Show all 15+ services" */
