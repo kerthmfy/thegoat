@@ -725,6 +725,8 @@ a.dev{cursor:zoom-in}
 }
 .cf-item img{display:block;width:100%;height:100%;object-fit:cover;border-radius:2px;box-shadow:0 8px 18px rgba(0,0,0,.28);-webkit-user-drag:none}
 .cf-item:not(.on){cursor:pointer}
+.cf-stage.moving{cursor:grabbing}
+.cf-stage.moving .cf-item{transition:none}   /* while dragging/scrolling, follow the finger exactly */
 .cf-item:focus-visible{outline:none}
 .cf-item:focus-visible img{outline:3px solid var(--aqua-mid);outline-offset:3px}
 .cf-cap{margin:2px 0 0;min-height:1.5em;font-size:14px;color:var(--stage-mute)}
@@ -1068,7 +1070,7 @@ a.dev{cursor:zoom-in}
         <div class="pad-body">
           <p class="done">&#x2611;&#xFE0E; ship Trajectories</p>
           <p class="done">&#x2611;&#xFE0E; 15+ containers up</p>
-          <p>&#x2610;&#xFE0E; finish Matinee</p>
+          <p>&#x2610;&#xFE0E; update Marquee</p>
           <p>&#x2610;&#xFE0E; learn automation</p>
           <p>&#x2610;&#xFE0E; write more notes</p>
           <p>&#x2610;&#xFE0E; back up the backups</p>
@@ -1820,14 +1822,16 @@ a.dev{cursor:zoom-in}
   }
 
   /* 9. COVER FLOW: my favorite films. Only posters that actually load are used;
-         with none, the shelf stays hidden. Click/tap a side poster, swipe, drag the
-         scroller or use the arrow keys to browse. Clicking the middle poster opens Letterboxd. */
+         with none, the shelf stays hidden. Browse by swiping/dragging, two-finger scrolling
+         on a touchpad, tapping a side poster, the scroller or the arrow keys.
+         Clicking the middle poster opens Letterboxd. */
   var cf = document.getElementById("cf");
   if (cf) {
     var cfStage = cf.querySelector(".cf-stage"), cfRange = cf.querySelector(".cf-scroll");
     var cfTitle = cf.querySelector(".cf-title"), cfYear = cf.querySelector(".cf-year"), cfReview = cf.querySelector(".cf-review");
     var cfAll = Array.prototype.slice.call(cf.querySelectorAll(".cf-item"));
     var cfItems = [], cfAt = 0, cfWaiting = cfAll.length;
+    var cfPos = 0, cfCaptionAt = -1;   /* set up first: cached posters can start the shelf right away */
 
     /* wait for every poster to load (or fail) before showing the shelf */
     cfAll.forEach(function (item) {
@@ -1850,43 +1854,99 @@ a.dev{cursor:zoom-in}
       cfShow(Math.floor((cfItems.length - 1) / 2));   /* start in the middle */
     }
 
-    /* put poster number i in the middle and turn the others sideways */
-    function cfShow(i) {
-      cfAt = Math.max(0, Math.min(cfItems.length - 1, i));
+    /* Where every poster sits. pos = which poster is in the middle. While a finger or
+       touchpad is moving it can be "in between" (like 1.4), so the posters glide with
+       you instead of jumping, the way iTunes did it. */
+    function cfPlace(pos) {
+      cfPos = Math.max(0, Math.min(cfItems.length - 1, pos));
       cfItems.forEach(function (item, k) {
-        var o = k - cfAt;              /* how many places from the middle (negative = left) */
-        var side = o < 0 ? -1 : 1, far = Math.abs(o);
-        item.style.transform = o === 0
-          ? "translateZ(40px)"
-          : "translateX(" + side * (82 + (far - 1) * 32) + "%) translateZ(-60px) rotateY(" + (-side * 62) + "deg)";
-        item.style.zIndex = 50 - far;
+        var o = k - cfPos;             /* how far from the middle (negative = left) */
+        var side = o < 0 ? -1 : 1, far = Math.abs(o), x, z, turn;
+        if (far <= 1) { x = 82 * far; z = 40 - 100 * far; turn = 62 * far; }   /* sliding into or out of the middle */
+        else { x = 82 + (far - 1) * 32; z = -60; turn = 62; }                  /* waiting at the side */
+        item.style.transform = "translateX(" + side * x + "%) translateZ(" + z + "px) rotateY(" + (-side * turn) + "deg)";
+        item.style.zIndex = Math.max(1, 50 - Math.round(far * 10));
         item.style.opacity = far > 4 ? 0 : 1;
-        item.tabIndex = o === 0 ? 0 : -1;  /* Tab lands on the middle one only */
-        item.classList.toggle("on", o === 0);
       });
-      var cur = cfItems[cfAt];
+      cfCaption(Math.round(cfPos));
+    }
+
+    /* title, year and review of the poster nearest the middle */
+    function cfCaption(i) {
+      if (i === cfCaptionAt) return;
+      cfCaptionAt = i;
+      var cur = cfItems[i];
       cfTitle.textContent = cur.dataset.title || "";
       cfYear.textContent = cur.dataset.year || "";
       cfReview.textContent = cur.dataset.review || "";
-      cfRange.value = cfAt;
+      cfRange.value = i;
+    }
+
+    /* settle with poster number i in the middle */
+    function cfShow(i) {
+      cfAt = Math.max(0, Math.min(cfItems.length - 1, Math.round(i)));
+      cfStage.classList.remove("moving");          /* glide into place */
+      cfPlace(cfAt);
+      cfItems.forEach(function (item, k) {
+        item.tabIndex = k === cfAt ? 0 : -1;       /* Tab lands on the middle one only */
+        item.classList.toggle("on", k === cfAt);
+      });
       cfRange.style.setProperty("--thumb", Math.max(30, cfRange.offsetWidth / cfItems.length) + "px");
     }
 
-    /* swipe (touch) or drag (mouse) */
-    var cfDownX = null, cfSwiped = false;
-    cfStage.addEventListener("pointerdown", function (e) { cfDownX = e.clientX; cfSwiped = false; });
-    cfStage.addEventListener("pointerup", function (e) {
-      if (cfDownX === null) return;
-      var dx = e.clientX - cfDownX; cfDownX = null;
-      if (Math.abs(dx) > 30) {         /* moved more than 30px: it's a swipe, not a tap */
-        cfSwiped = true;
-        var steps = Math.max(1, Math.round(Math.abs(dx) / 120));   /* a longer swipe skips more */
-        cfShow(cfAt + (dx < 0 ? steps : -steps));
-      }
+    /* how far you drag or scroll to move one poster */
+    function cfStep() { return cfItems[0].offsetWidth * 0.6; }
+
+    /* DRAG with a finger or the mouse: the posters follow, then settle on the nearest one.
+       A quick flick carries on a little further. Up/down swipes still scroll the page. */
+    var cfDrag = null, cfDragged = false;
+    cfStage.addEventListener("pointerdown", function (e) {
+      if (e.button > 0 || !cfItems.length) return;
+      cfDrag = { id: e.pointerId, x: e.clientX, from: cfPos, moving: false, lastX: e.clientX, lastT: e.timeStamp, speed: 0 };
+      cfDragged = false;
     });
+    cfStage.addEventListener("pointermove", function (e) {
+      if (!cfDrag || e.pointerId !== cfDrag.id) return;
+      var dx = e.clientX - cfDrag.x;
+      if (!cfDrag.moving) {
+        if (Math.abs(dx) < 8) return;              /* a tiny wobble is still a tap */
+        cfDrag.moving = cfDragged = true;
+        cfStage.setPointerCapture(e.pointerId);    /* keep following even off the shelf */
+        cfStage.classList.add("moving");
+      }
+      var dt = e.timeStamp - cfDrag.lastT;
+      if (dt > 0) cfDrag.speed = (e.clientX - cfDrag.lastX) / dt;   /* pixels per millisecond */
+      cfDrag.lastX = e.clientX; cfDrag.lastT = e.timeStamp;
+      cfPlace(cfDrag.from - dx / cfStep());
+    });
+    function cfEndDrag(e) {
+      if (!cfDrag) return;
+      var d = cfDrag; cfDrag = null;
+      if (!d.moving) return;
+      var speed = e.timeStamp - d.lastT > 100 ? 0 : d.speed;   /* stopped before letting go: no flick */
+      cfShow(cfPos - speed * 120 / cfStep());
+    }
+    cfStage.addEventListener("pointerup", cfEndDrag);
+    cfStage.addEventListener("pointercancel", cfEndDrag);
+
+    /* SCROLL sideways with two fingers on a touchpad (or Shift + mouse wheel) */
+    var cfWheelStop;
+    cfStage.addEventListener("wheel", function (e) {
+      if (!cfItems.length) return;
+      var dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
+      if (!dx) return;                             /* scrolling up/down still scrolls the page */
+      e.preventDefault();
+      if (e.deltaMode === 1) dx *= 30;             /* some mice count in lines, not pixels */
+      cfStage.classList.add("moving");
+      cfPlace(cfPos + dx / cfStep());
+      clearTimeout(cfWheelStop);
+      cfWheelStop = setTimeout(function () { cfShow(cfPos); }, 140);   /* settle once the scrolling stops */
+    }, { passive: false });
+
+    /* CLICK a side poster to bring it to the middle; the middle one opens Letterboxd */
     cfStage.addEventListener("click", function (e) {
       var item = e.target.closest(".cf-item");
-      if (cfSwiped) { e.preventDefault(); cfSwiped = false; return; }
+      if (cfDragged) { e.preventDefault(); cfDragged = false; return; }
       if (item && !item.classList.contains("on")) { e.preventDefault(); cfShow(cfItems.indexOf(item)); }
     });
     cfStage.addEventListener("keydown", function (e) {
